@@ -441,6 +441,33 @@ public static class Main
             {
                 new("buttons.ok")
             };
+            if (achi.unlocked)
+            {
+                popupButtons.Insert(0, new PopupBase.PopupButtonData("buttons.ungrant", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)ungrant, -1, false, customColorStates: ColorConstants.redButtonColorStates));
+            }
+            void ungrant(int id, BaseEventData eventData)
+            {
+                BasicPopup pop1 = PopupManager.GetBasicPopup();
+                pop1.Header = "Are you sure?";
+                pop1.Description = "Do you really want to reset this achievement? You would have to earn it again to have it unlocked!";
+                List<PopupBase.PopupButtonData> popupButtons1 = new()
+                {
+                    new("buttons.nevermindachi"),
+                    new PopupBase.PopupButtonData("buttons.absolutely", PopupBase.PopupButtonData.States.None, (UIButtonBase.ButtonAction)absolutely, -1, true, customColorStates: ColorConstants.redButtonColorStates)
+                };
+
+                void absolutely(int id, BaseEventData baseEventData)
+                {
+                    Achievements[Main.GetAchievementLocation(achi.idx)].unlocked = false;
+                    unlockedDict[achi.idx] = false;
+                    PrefsHelper.SaveDict(unlockedDict);
+                    popup.Hide();
+                    viewmodePopup.Hide();
+                }
+
+                pop1.Show();
+                pop1.buttonData = popupButtons1.ToArray();
+            }
             popup.buttonData = popupButtons.ToArray();
             popup.Show();
         }
