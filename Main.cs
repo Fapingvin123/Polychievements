@@ -22,10 +22,12 @@ using UnityEngine;
 //using System.Reflection;
 using UnityEngine.EventSystems;
 //using Il2CppMicrosoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-
+using UnityEngine.Networking;
+using System.Collections;
 
 namespace test;
+
+
 
 public class Achievement
 {
@@ -179,7 +181,7 @@ public static class Main
         new Achievement(){
             idx = 10,
             name = "The Diplomat",
-            description = "Have an embassy in at least 5 tribes' capitals on Crazy difficulty.",
+            description = "Have an embassy in at least 4 tribes' capitals on at least Normal difficulty.",
             category = 1
         },
 
@@ -215,7 +217,7 @@ public static class Main
         new Achievement(){
             idx = 15,
             name = "A welcomed neighbor",
-            description = "Eradicate a tribe by turn 5.",
+            description = "Eradicate a tribe before turn 5.",
             category = 2
         },
 
@@ -234,6 +236,47 @@ public static class Main
             description = "Have 50 income before reaching turn 20 with at least 1 crazy AI opponent.",
             category = 2
         },
+
+        new Achievement(){
+            idx = 18,
+            name = "Cartography",
+            description = "Reveal all tiles in a Large map or bigger."
+        },
+
+        new Achievement(){
+            idx = 19,
+            name = "City of Wonders",
+            description = "Build all Monuments in a single city."
+        },
+
+        new Achievement(){
+            idx = 20,
+            name = "All roads lead to Dopilus",
+            hiddenDesc = true,
+            // Playing as Imperius, have half of the worlds' cities connected to your capital
+            description = "Playing as Imperius, have half of the worlds' cities connected to your capital."
+        },
+
+        new Achievement(){
+            idx = 21,
+            name = "Knight of Terror",
+            description = "Own a knight that has killed more than 10 units.",
+            category = 1
+        },
+
+        new Achievement(){
+            idx = 22,
+            name = "Life Ashore",
+            description = "Win a Waterworld or Archipelago game without ever discovering Aquatism or Navigation (Medium or harder difficulty)",
+            category = 1
+        },
+
+        new Achievement(){
+            idx = 23,
+            name = "The \"Diplomat\"",
+            description = "Gain 50 stars in turn from infiltrating enemy cities.",
+            category = 2
+        }
     };
 
     public static int GetAchievementIdx(string title)
@@ -275,24 +318,26 @@ public static class Main
     static int veteranidx = GetAchievementLocation(1);
     static int howdidweidx = GetAchievementLocation(2);
     static int yoinkidx = GetAchievementLocation(3);
-    static int parkidx =GetAchievementLocation(4);
+    static int parkidx = GetAchievementLocation(4);
     static int wipeidx = GetAchievementLocation(5);
     static int secret1idx = GetAchievementLocation(6);
     static int sdachidx = GetAchievementLocation(7); //s(erious) d(edication) ach(ievement) i(n)d(e)x
     static int stachidx = GetAchievementLocation(8); //super team achievement idx
     static int geniusidx = GetAchievementLocation(9);
-    
-    
-    
-    
-    
-    
-    
+    static int diplomatidx = GetAchievementLocation(10);
+
+
+
+
+
+
+
 
 
     public static ManualLogSource modLogger;
     public static void Load(ManualLogSource logger)
     {
+
         Harmony.CreateAndPatchAll(typeof(Main));
         modLogger = logger;
         logger.LogMessage("Polychievements.dll loaded");
@@ -302,6 +347,9 @@ public static class Main
         {
             Achievements[ach.idx].unlocked = unlockedDict[ach.idx];
         }
+
+
+
 
         if (Achievements.Count < -1)
         {
@@ -435,7 +483,7 @@ public static class Main
             var achi = Achievements[id];
             popup.Header = achi.name;
             string unlockedis = achi.unlocked ? "Unlocked." : "Not unlocked.";
-            if (!(achi.hiddenDesc && !achi.unlocked)) popup.Description = achi.description + "\n\n"+unlockedis;
+            if (!(achi.hiddenDesc && !achi.unlocked)) popup.Description = achi.description + "\n\n" + unlockedis;
             else popup.Description = "???\n\nUnlocked: " + achi.unlocked.ToString();
             List<PopupBase.PopupButtonData> popupButtons = new()
             {
@@ -597,7 +645,8 @@ public static class Main
             return;
         }
         AchievementPopup(achievement);
-        AudioManager.PlaySFX(SFXTypes.Achievement, PolytopiaBackendBase.Common.SkinType.Default, 1, 1, 0);
+        AudioManager.PlaySFX(SFXTypes.Achievement, PolytopiaBackendBase.Common.SkinType.Default, 1f, 1f, 1f);
+
         achievement.unlocked = true;
         unlockedDict[achievement.idx] = true;
         PrefsHelper.SaveDict(unlockedDict);
@@ -607,7 +656,7 @@ public static class Main
     [HarmonyPatch(typeof(BuildAction), nameof(BuildAction.ExecuteDefault))]
     public static void BuildAchievements(BuildAction __instance, GameState gameState)
     {
-        
+
         if (__instance.PlayerId != GameManager.LocalPlayer.Id)
         {
             return;
@@ -636,11 +685,11 @@ public static class Main
         }
 
 
-        
+
         int veterancounter = 0;
         int SECRETcounter1 = 0;
 
-        
+
         List<UnitData.Type> units = new List<UnitData.Type>();
 
         foreach (var tile in gameState.Map.Tiles)
@@ -704,6 +753,23 @@ public static class Main
         {
             Main.GrantAchievement(Achievements[stachidx]);
         }
+
+        int embassies = 0;
+        foreach (var item in gameState.PlayerStates)
+        {
+            if (player != item)
+            {
+                if (item.GetRelation(player.Id).EmbassyLevel > 0)
+                {
+                    embassies++;
+                }
+            }
+        }
+        if (embassies >= 4 && gameState.Settings.Difficulty != BotDifficulty.Easy)
+        {
+            Main.GrantAchievement(Achievements[diplomatidx]);
+        }
+        
     }
 
     //Mindbend a giant
@@ -721,7 +787,7 @@ public static class Main
             return;
         }
 
-        
+
         if (unit2.type == UnitData.Type.Giant)
         {
             Main.GrantAchievement(Achievements[yoinkidx]);
@@ -732,7 +798,7 @@ public static class Main
     [HarmonyPatch(typeof(WipePlayerAction), nameof(WipePlayerAction.ExecuteDefault))]
     public static void WipePlayerAction_ExecuteDefault(WipePlayerAction __instance, GameState state)
     {
-        
+
         if (__instance.PlayerId == GameManager.LocalPlayer.Id)
         {
             Main.GrantAchievement(Achievements[wipeidx]);
