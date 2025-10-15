@@ -24,6 +24,7 @@ using UnityEngine.EventSystems;
 //using Il2CppMicrosoft.Extensions.DependencyInjection;
 using UnityEngine.Networking;
 using System.Collections;
+using UnityEngine.UIElements.UIR;
 
 namespace test;
 
@@ -325,8 +326,15 @@ public static class Main
     static int stachidx = GetAchievementLocation(8); //super team achievement idx
     static int geniusidx = GetAchievementLocation(9);
     static int diplomatidx = GetAchievementLocation(10);
-
-
+    static int secret2idx = GetAchievementLocation(11);
+    static int firstwinidx = GetAchievementLocation(12);
+    static int crazywinidx = GetAchievementLocation(13);
+    static int vengirwateridx = GetAchievementLocation(14);
+    static int welcomeidx = GetAchievementLocation(15);
+    static int secret3idx = GetAchievementLocation(16);
+    static int economyidx = GetAchievementLocation(17);
+    static int cartographyidx = GetAchievementLocation(18);
+    static int cowidx = GetAchievementLocation(19);
 
 
 
@@ -652,6 +660,11 @@ public static class Main
         PrefsHelper.SaveDict(unlockedDict);
     }
 
+    public static bool isMonument(ImprovementData.Type type)
+    {
+        return type == ImprovementData.Type.Monument1 || type == ImprovementData.Type.Monument2 || type == ImprovementData.Type.Monument3 || type == ImprovementData.Type.Monument4 || type == ImprovementData.Type.Monument5 || type == ImprovementData.Type.Monument6 || type == ImprovementData.Type.Monument7;
+    }
+
     [HarmonyPostfix]
     [HarmonyPatch(typeof(BuildAction), nameof(BuildAction.ExecuteDefault))]
     public static void BuildAchievements(BuildAction __instance, GameState gameState)
@@ -668,6 +681,27 @@ public static class Main
         if (__instance.Type == ImprovementData.Type.Farm)
         {
             Main.GrantAchievement(Achievements[farmingidx]);
+        }
+        if (Main.isMonument(__instance.Type))
+        {
+            List<ImprovementData.Type> list = new List<ImprovementData.Type>
+            {
+                ImprovementData.Type.Farm
+            };
+            foreach (var item in ActionUtils.GetCityArea(gameState, gameState.Map.GetTile(gameState.Map.GetTile(__instance.Coordinates).rulingCityCoordinates)))
+            {
+                if (item != null && item.improvement != null)
+                {
+                    if (Main.isMonument(item.improvement.type) && !list.Contains(item.improvement.type))
+                    {
+                        list.Add(item.improvement.type);
+                    }
+                }
+            }
+            if (list.Count > 7) // >=8, since we have the dummy farm
+            {
+                Main.GrantAchievement(Achievements[cowidx]);
+            }
         }
     }
 
@@ -688,12 +722,17 @@ public static class Main
 
         int veterancounter = 0;
         int SECRETcounter1 = 0;
+        int cartographycounter = 0;
 
 
         List<UnitData.Type> units = new List<UnitData.Type>();
 
         foreach (var tile in gameState.Map.Tiles)
         {
+            if (tile.GetExplored(player.Id))
+            {
+                cartographycounter++;
+            }
             if (tile.unit != null)
             {
                 if (tile.unit.owner == player.Id)
@@ -723,6 +762,7 @@ public static class Main
                 {
                     if (tile.improvement.type == ImprovementData.Type.City)
                     {
+                        Main.modLogger.LogMessage("Park count for city " + tile.improvement.name + " " + tile.improvement.RewardCount(CityReward.Park));
                         if (tile.improvement.RewardCount(CityReward.Park) >= 5)
                         {
                             Main.GrantAchievement(Achievements[parkidx]);
@@ -769,7 +809,18 @@ public static class Main
         {
             Main.GrantAchievement(Achievements[diplomatidx]);
         }
-        
+
+        if (gameState.CurrentTurn < 20 && gameState.Settings.Difficulty == BotDifficulty.Crazy && gameState.Settings.OpponentCount > 0 && ResourceDataUtils.CalculateIncomeFor(gameState, player.Id) >= 50)
+        {
+            Main.GrantAchievement(Achievements[economyidx]);
+        }
+
+        modLogger.LogMessage(cartographycounter + " " + gameState.Settings.MapSize);
+        if (cartographycounter >= (gameState.Settings.MapSize * gameState.Settings.MapSize ) && (gameState.Settings.MapSize * gameState.Settings.MapSize ) >= 324)
+        {
+            Main.GrantAchievement(Achievements[cartographyidx]);
+        }
+
     }
 
     //Mindbend a giant
@@ -802,6 +853,28 @@ public static class Main
         if (__instance.PlayerId == GameManager.LocalPlayer.Id)
         {
             Main.GrantAchievement(Achievements[wipeidx]);
+            if (state.CurrentTurn < 5)
+            {
+                Main.GrantAchievement(Achievements[welcomeidx]);
+            }
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameOverAction), nameof(GameOverAction.Execute))]
+    public static void GameOverAction_Execute(GameOverAction __instance, GameState state)
+    {
+        if (__instance.WinningPlayerId == GameManager.LocalPlayer.Id)
+        {
+            Main.GrantAchievement(Achievements[firstwinidx]);
+            if (state.Settings.Difficulty == BotDifficulty.Crazy)
+            {
+                Main.GrantAchievement(Achievements[crazywinidx]);
+                if (state.Settings.mapPreset == MapPreset.WaterWorld && state.Settings.OpponentCount >= 15)
+                {
+                    Main.GrantAchievement(Achievements[vengirwateridx]);
+                }
+            }
         }
     }
 
