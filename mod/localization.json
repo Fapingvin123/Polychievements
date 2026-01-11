@@ -1,0 +1,20 @@
+{
+    "buttons.easyach": {
+        "English": "Easy"
+    },
+    "buttons.mediumach": {
+        "English": "Medium"
+    },
+    "buttons.hardach": {
+        "English": "Hard"
+    },
+    "buttons.ungrant": {
+        "English": "Reset Achievement"
+    },
+    "buttons.nevermindachi": {
+        "English": "Nevermind"
+    },
+    "buttons.absolutely": {
+        "English": "ABSOLUTELY"
+    }
+}
