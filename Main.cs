@@ -22,9 +22,6 @@ using UnityEngine;
 //using System.Reflection;
 using UnityEngine.EventSystems;
 //using Il2CppMicrosoft.Extensions.DependencyInjection;
-using UnityEngine.Networking;
-using System.Collections;
-using UnityEngine.UIElements.UIR;
 
 namespace test;
 
@@ -121,41 +118,48 @@ public static class Main
         },
 
         new Achievement(){
-            idx = 5,
+            idx = 2,
             name = "Blood!",
             description = "Eradicate a tribe."
         },
 
         new Achievement(){
-            idx = 9,
+            idx = 3,
             name = "We Move Unseen",
-            description = "Have three unrevelaed cloaks in enemy territory.",
+            description = "Have three unrevealed cloaks in enemy territory.",
             category = 0
         },
 
         new Achievement(){
-            idx = 12,
+            idx = 4,
             name = "First Win!",
             description = "Win a game."
         },
 
         new Achievement(){
-            idx = 18,
+            idx = 5,
             name = "Cartography",
             description = "Reveal all tiles in a Large map or bigger."
         },
 
         new Achievement(){
-            idx = 19,
+            idx = 6,
             name = "City of Wonders",
             description = "Build all Monuments in a single city."
         },
 
         new Achievement(){
-            idx = 20,
+            idx = 7,
             name = "All roads lead to Dopilus",
             hiddenDesc = true,
             description = "Playing as Imperius, have half of the worlds' cities connected to your capital."
+        },
+
+        new Achievement()
+        {
+            idx = 8,
+            name = "Colonizer",
+            description = "Have at least 1 city from all other tribes on a Large map or bigger."
         },
 
         ////////////////////////////////////////
@@ -165,21 +169,21 @@ public static class Main
         
 
         new Achievement(){
-            idx = 3,
+            idx = 9,
             name = "Yoink!",
             description = "Mindbend a giant.",
             category = 1
         },
 
         new Achievement(){
-            idx = 4,
+            idx = 10,
             name = "Green City",
             description = "Have 5 parks in a city you own.",
             category = 1
         },
 
         new Achievement(){
-            idx = 6,
+            idx = 11,
             name = "Hypnotist",
             hiddenDesc = true,
             description = "Convert a mindbender with a mindbender.",
@@ -187,7 +191,7 @@ public static class Main
         },
 
         new Achievement(){
-            idx = 7,
+            idx = 12,
             name = "Serious Dedication",
             description = "Research Aquatism and Navigation on a Drylands map by turn 10.",
             category = 1
@@ -201,21 +205,21 @@ public static class Main
         },
 
         new Achievement(){
-            idx = 10,
+            idx = 14,
             name = "The Diplomat",
             description = "Have an embassy in at least 4 tribes' capitals on at least Normal difficulty.",
             category = 1
         },
 
         new Achievement(){
-            idx = 21,
+            idx = 15,
             name = "Knight of Terror",
             description = "Own a knight that has killed more than 10 units.",
             category = 1
         },
 
         new Achievement(){
-            idx = 22,
+            idx = 16,
             name = "Life Ashore",
             description = "Win a Waterworld or Archipelago map without researching Aquatism or Navigation on Normal or harder difficulty.",
             category = 1
@@ -226,21 +230,21 @@ public static class Main
         /////////////////////////
 
         new Achievement(){
-            idx = 2,
+            idx = 17,
             name = "How did we get here?",
             description = "Have a Poisoned, Frozen, Speedy, Veteran unit.",
             category = 2
         },
 
         new Achievement(){
-            idx = 8,
+            idx = 18,
             name = "Super Team",
             description = "Own a Giant, a Crab, a Dragon, a Gaami and a Centipede.",
             category = 2
         },
 
         new Achievement(){
-            idx = 11,
+            idx = 19,
             name = "Houdini",
             description = "Kill a unit sieging your city by spawning a Super Unit in the city, with no available tiles for the attacker to move.",
             hiddenDesc = true,
@@ -248,21 +252,21 @@ public static class Main
         },
 
         new Achievement(){
-            idx = 14,
+            idx = 20,
             name = "Vengir Waterworld",
             description = "Win a Crazy difficulty Waterworld game with Vengir, playing against 15 bots.",
             category = 2
         },
 
         new Achievement(){
-            idx = 15,
+            idx = 21,
             name = "A welcomed neighbor",
             description = "Eradicate a tribe before turn 5.",
             category = 2
         },
 
         new Achievement(){
-            idx = 16,
+            idx = 22,
             name = "Atlantis",
             hiddenDesc = true,
             description = "Have an island city reach level 10.",
@@ -270,19 +274,39 @@ public static class Main
         },
 
         new Achievement(){
-            idx = 17,
+            idx = 23,
             name = "Economist",
             description = "Have 50 income before reaching turn 20 with at least 1 crazy AI opponent.",
             category = 2
         },
 
         new Achievement(){
-            idx = 23,
+            idx = 24,
             name = "The \"Diplomat\"",
             description = "Gain 50 stars in turn from infiltrating enemy cities.",
             category = 2
         }
     };
+
+    #region Utils
+
+    /// <summary>
+    /// Registers an achievement safely at runtime. Returns success.
+    /// </summary>
+    /// <param name="achievement"></param>
+    public static bool AddAchievementRunTime(Achievement achievement)
+    {
+        achievement.idx = string.Concat(achievement.name, achievement.description).GetHashCode(); //done so that no matter the order, indexing stays consistent
+        if(GetAchievement(achievement.idx) != null)
+        {
+            modLogger.LogFatal("Error adding achievement at runtime! Index already exists, change description or name of achievement "+achievement.name);
+            return false;
+        }
+        if(unlockedDict.TryGetValue(achievement.idx, out bool result)) achievement.unlocked = result;
+        else achievement.unlocked = false;
+        Achievements.Add(achievement);
+        return true;
+    }
 
     public static int GetAchievementIdx(string title)
     {
@@ -307,6 +331,11 @@ public static class Main
         }
         return null;
     }
+
+    public static Achievement GetAchievement(string title)
+    {
+        return Achievements[GetAchievementLocation(GetAchievementIdx(title))];
+    }
     public static int GetAchievementLocation(int idx) // Ideally return value is the same as input value but better be safe
     {
         for (int i = 0; i < Achievements.Count; i++)
@@ -318,7 +347,7 @@ public static class Main
         }
         return -1;
     }
-
+    #endregion
 
 
 
@@ -352,10 +381,7 @@ public static class Main
         else return gld.GetTribeColor(PolytopiaBackendBase.Common.TribeType.Xinxi, PolytopiaBackendBase.Common.SkinType.Default);
     }
 
-    public static void AchievementPopup(Achievement achievement)
-    {
-        NotificationManager.Notify(achievement.description, achievement.name, PolyMod.Registry.GetSprite("achievement"));
-    }
+
 
     // Generously stolen from klipi
     internal static void AddUiButtonToArray(UIRoundButton prefabButton, HudScreen hudScreen, UIButtonBase.ButtonAction action, UIRoundButton[] buttonArray, string? description = null)
@@ -364,7 +390,7 @@ public static class Main
         button.transform.parent = hudScreen.buttonBar.transform;
         button.OnClicked += action;
         List<UIRoundButton> list = buttonArray.ToList();
-        list.Add(button);
+        list.Insert(list.Count-2, button);
         list.ToArray();
 
         if (description != null)
@@ -506,7 +532,6 @@ public static class Main
                 return false;
             }
             __instance.selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
-            // __instance.selectViewmodePopup.Header = Localization.Get("replay.viewmode.header", new Il2CppSystem.Object[] { });
             if (AchViewMode == 0)
             {
                 __instance.selectViewmodePopup.Header = "Easy Achievements";
@@ -576,8 +601,37 @@ public static class Main
 
     #endregion
 
-    #region AchGranting
+    #region Common Triggers
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(BuildAction), nameof(BuildAction.ExecuteDefault))]
+    public static void BuildAction_ExecuteDefault(BuildAction __instance, GameState gameState)
+    {
+        ImprovementAcquired(gameState, __instance.Coordinates, __instance.PlayerId, __instance.Type, "build");
+    }
 
+
+    #endregion
+
+    #region Common Events
+
+    public static void ImprovementAcquired(GameState state, WorldCoordinates coordinates, byte player, ImprovementData.Type type, string reason)
+    {
+        if(player == GameManager.LocalPlayer.Id)
+        {
+            if(reason == "build")
+            {
+                if(type == ImprovementData.Type.Farm) GrantAchievement(GetAchievement("Agriculture"));
+            }
+        }
+    }
+
+    #endregion
+
+    #region AchGranting
+    public static void AchievementPopup(Achievement achievement)
+    {
+        NotificationManager.Notify(achievement.description, achievement.name, PolyMod.Registry.GetSprite("achievement"));
+    }
     public static void GrantAchievement(Achievement achievement)
     {
         if (achievement.unlocked)
@@ -591,6 +645,5 @@ public static class Main
         unlockedDict[achievement.idx] = true;
         PrefsHelper.SaveDict(unlockedDict);
     }
-
     #endregion
 }
