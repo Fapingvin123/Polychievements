@@ -42,9 +42,7 @@ public class Achievement
 
 public static class PrefsHelper
 {
-    private const string Key = "MyDict";
-
-    // Create default dict {0:false, 1:false, ..., 12:false}
+    private const string Key = "Polychievements";
     public static Dictionary<int, bool> CreateDefault()
     {
         var dict = new Dictionary<int, bool>();
@@ -67,9 +65,9 @@ public static class PrefsHelper
     public static Dictionary<int, bool> LoadDict()
     {
         if (!PlayerPrefs.HasKey(Key))
-            return CreateDefault();  // no save yet → default
+            return CreateDefault();
 
-        var dict = CreateDefault(); // start with default (so missing keys still exist)
+        var dict = CreateDefault();
         string encoded = PlayerPrefs.GetString(Key);
 
         foreach (var entry in encoded.Split(';'))
@@ -79,24 +77,20 @@ public static class PrefsHelper
 
             var kv = entry.Split('=');
             if (kv.Length != 2)
-                continue; // skip malformed
+                continue;
 
-            // trim whitespace
             var kStr = kv[0].Trim();
             var vStr = kv[1].Trim();
 
             if (!int.TryParse(kStr, out int key))
-                continue; // skip if key not int
+                continue;
             if (!int.TryParse(vStr, out int val))
-                continue; // skip if value not int
+                continue;
 
-            // only accept keys in 0..MaxKey
             if (key < 0 || key > Main.Achievements.Count)
                 continue;
 
-            dict[key] = val != 0; // any non-zero → true
-            //Main.Achievements[key].unlocked = val != 0; Does not work
-            //Main.modLogger.LogMessage("Did some stuff "+key+(val != 0).ToString());
+            dict[key] = val != 0;
         }
 
         return dict;
@@ -111,6 +105,9 @@ public static class Main
 
     public static List<Achievement> Achievements = new List<Achievement>()
     {
+        /////////////////////////
+        /// EASY
+        /////////////////////////
         new Achievement(){
             idx = 0,
             name = "Agriculture",
@@ -124,118 +121,22 @@ public static class Main
         },
 
         new Achievement(){
-            idx = 2,
-            name = "How did we get here?",
-            description = "Have a unit with all four status effects at once (frozen, poisoned, boosted, veteran).",
-            category = 2
-        },
-
-        new Achievement(){
-            idx = 3,
-            name = "Yoink!",
-            description = "Mindbend a giant.",
-            category = 1
-        },
-
-        new Achievement(){
-            idx = 4,
-            name = "Green City",
-            description = "Have 5 parks in a city you own.",
-            category = 1
-        },
-
-        new Achievement(){
             idx = 5,
             name = "Blood!",
             description = "Eradicate a tribe."
         },
 
         new Achievement(){
-            idx = 6,
-            name = "The Hoodrick Hood",
-            hiddenDesc = true,
-            description = Decipher("Hpg fhkx matg " + DecryptInt(214748354).ToString() + " ngbml, tee tkvaxkl.", 19),
-            category = 1
-        },
-
-        new Achievement(){
-            idx = 7,
-            name = "Serious Dedication",
-            description = "Research Aquatism and Navigation on a Drylands map by turn 10.",
-            category = 1
-        },
-
-        new Achievement(){
-            idx = 8,
-            name = "Super Team",
-            description = "Own a Giant, a Crab, a Dragon, a Gaami and a Centipede.",
-            category = 2
-        },
-
-        new Achievement(){
             idx = 9,
-            name = "Master Genius",
-            description = "Build the Tower of Wisdom on at least Normal Difficulty.",
+            name = "We Move Unseen",
+            description = "Have three unrevelaed cloaks in enemy territory.",
             category = 0
-        },
-
-        new Achievement(){
-            idx = 10,
-            name = "The Diplomat",
-            description = "Have an embassy in at least 4 tribes' capitals on at least Normal difficulty.",
-            category = 1
-        },
-
-        new Achievement(){
-            idx = 11,
-            name = "The Great Wall",
-            //Playing as Xin-Xi, put a defender on all of your border tiles, while having at least 3 cities, having chosen Walls in each of your cities.
-            description = Decipher("Ietrbgz tl Qbg-qb, inm t wxyxgwxk hg tee hy rhnk uhkwxk mbexl, pabex atobgz tm extlm "+ DecryptInt(214748361).ToString() + " vbmbxl, atobgz vahlxg 'Pteel' bg xtva hy maxf.", 19),
-            hiddenDesc = true,
-            category = 2
         },
 
         new Achievement(){
             idx = 12,
             name = "First Win!",
             description = "Win a game."
-        },
-
-        new Achievement(){
-            idx = 13,
-            name = "Crazy good!",
-            description = "Win a Crazy difficulty game.",
-            category = 1
-        },
-
-        new Achievement(){
-            idx = 14,
-            name = "Vengir Waterworld",
-            description = "Win a Crazy difficulty Waterworld game with Vengir, playing against 15 bots.",
-            category = 2
-        },
-
-        new Achievement(){
-            idx = 15,
-            name = "A welcomed neighbor",
-            description = "Eradicate a tribe before turn 5.",
-            category = 2
-        },
-
-        new Achievement(){
-            idx = 16,
-            name = "Bug Math",
-            hiddenDesc = true,
-            // Own a centipede with 1 segment, one with 2 segments, one with 3 segments, one with 4 segments and one with 5 segments strictly.
-            description = Decipher("Hpg t vxgmbixwx pbma 1 lxzfxgm, hgx pbma 2 lxzfxgml, hgx pbma 3 lxzfxgml, hgx pbma 4 lxzfxgml tgw hgx pbma 5 lxzfxgml lmkbvmer.", 19),
-            category = 2
-        },
-
-        new Achievement(){
-            idx = 17,
-            name = "Economist",
-            description = "Have 50 income before reaching turn 20 with at least 1 crazy AI opponent.",
-            category = 2
         },
 
         new Achievement(){
@@ -254,8 +155,56 @@ public static class Main
             idx = 20,
             name = "All roads lead to Dopilus",
             hiddenDesc = true,
-            // Playing as Imperius, have half of the worlds' cities connected to your capital
             description = "Playing as Imperius, have half of the worlds' cities connected to your capital."
+        },
+
+        ////////////////////////////////////////
+        /// MEDIUM
+        ////////////////////////////////////////
+
+        
+
+        new Achievement(){
+            idx = 3,
+            name = "Yoink!",
+            description = "Mindbend a giant.",
+            category = 1
+        },
+
+        new Achievement(){
+            idx = 4,
+            name = "Green City",
+            description = "Have 5 parks in a city you own.",
+            category = 1
+        },
+
+        new Achievement(){
+            idx = 6,
+            name = "Hypnotist",
+            hiddenDesc = true,
+            description = "Convert a mindbender with a mindbender.",
+            category = 1
+        },
+
+        new Achievement(){
+            idx = 7,
+            name = "Serious Dedication",
+            description = "Research Aquatism and Navigation on a Drylands map by turn 10.",
+            category = 1
+        },
+
+        new Achievement(){
+            idx = 13,
+            name = "Crazy good!",
+            description = "Win a Crazy difficulty game.",
+            category = 1
+        },
+
+        new Achievement(){
+            idx = 10,
+            name = "The Diplomat",
+            description = "Have an embassy in at least 4 tribes' capitals on at least Normal difficulty.",
+            category = 1
         },
 
         new Achievement(){
@@ -268,8 +217,63 @@ public static class Main
         new Achievement(){
             idx = 22,
             name = "Life Ashore",
-            description = "Win a Waterworld or Archipelago game without ever discovering Aquatism or Navigation (Medium or harder difficulty)",
+            description = "Win a Waterworld or Archipelago map without researching Aquatism or Navigation on Normal or harder difficulty.",
             category = 1
+        },
+
+        /////////////////////////
+        /// HARD
+        /////////////////////////
+
+        new Achievement(){
+            idx = 2,
+            name = "How did we get here?",
+            description = "Have a Poisoned, Frozen, Speedy, Veteran unit.",
+            category = 2
+        },
+
+        new Achievement(){
+            idx = 8,
+            name = "Super Team",
+            description = "Own a Giant, a Crab, a Dragon, a Gaami and a Centipede.",
+            category = 2
+        },
+
+        new Achievement(){
+            idx = 11,
+            name = "Houdini",
+            description = "Kill a unit sieging your city by spawning a Super Unit in the city, with no available tiles for the attacker to move.",
+            hiddenDesc = true,
+            category = 2
+        },
+
+        new Achievement(){
+            idx = 14,
+            name = "Vengir Waterworld",
+            description = "Win a Crazy difficulty Waterworld game with Vengir, playing against 15 bots.",
+            category = 2
+        },
+
+        new Achievement(){
+            idx = 15,
+            name = "A welcomed neighbor",
+            description = "Eradicate a tribe before turn 5.",
+            category = 2
+        },
+
+        new Achievement(){
+            idx = 16,
+            name = "Atlantis",
+            hiddenDesc = true,
+            description = "Have an island city reach level 10.",
+            category = 2
+        },
+
+        new Achievement(){
+            idx = 17,
+            name = "Economist",
+            description = "Have 50 income before reaching turn 20 with at least 1 crazy AI opponent.",
+            category = 2
         },
 
         new Achievement(){
@@ -315,28 +319,6 @@ public static class Main
         return -1;
     }
 
-    static int farmingidx = GetAchievementLocation(0);
-    static int veteranidx = GetAchievementLocation(1);
-    static int howdidweidx = GetAchievementLocation(2);
-    static int yoinkidx = GetAchievementLocation(3);
-    static int parkidx = GetAchievementLocation(4);
-    static int wipeidx = GetAchievementLocation(5);
-    static int secret1idx = GetAchievementLocation(6);
-    static int sdachidx = GetAchievementLocation(7); //s(erious) d(edication) ach(ievement) i(n)d(e)x
-    static int stachidx = GetAchievementLocation(8); //super team achievement idx
-    static int geniusidx = GetAchievementLocation(9);
-    static int diplomatidx = GetAchievementLocation(10);
-    static int secret2idx = GetAchievementLocation(11);
-    static int firstwinidx = GetAchievementLocation(12);
-    static int crazywinidx = GetAchievementLocation(13);
-    static int vengirwateridx = GetAchievementLocation(14);
-    static int welcomeidx = GetAchievementLocation(15);
-    static int secret3idx = GetAchievementLocation(16);
-    static int economyidx = GetAchievementLocation(17);
-    static int cartographyidx = GetAchievementLocation(18);
-    static int cowidx = GetAchievementLocation(19);
-
-
 
 
 
@@ -356,56 +338,7 @@ public static class Main
             Achievements[ach.idx].unlocked = unlockedDict[ach.idx];
         }
 
-
-
-
-        if (Achievements.Count < -1)
-        {
-            modLogger.LogMessage("IMPORTANT!!!");
-            modLogger.LogMessage("Dear People who watch this code!");
-            modLogger.LogMessage("This log will not appear in the game, but can be viewed by you hopefully!");
-            modLogger.LogMessage("Some achievements are secret, and not wanting to spoil the fun for y'all if y'all want to play this, I decided to try hiding these.");
-            modLogger.LogMessage("Of course, you can find the hidden achievements' descriptions if you want to, but hopefully you won't accidentally.");
-            modLogger.LogMessage("Main.Decipher decodes encrypted strings thus.");
-        }
-
     }
-
-    public static char cipher(char ch, int key)
-    {
-        if (!char.IsLetter(ch))
-        {
-
-            return ch;
-        }
-
-        char d = char.IsUpper(ch) ? 'A' : 'a';
-        return (char)((((ch + key) - d) % 26) + d);
-
-
-    }
-
-
-    public static string Encipher(string input, int key)
-    {
-        string output = string.Empty;
-
-        foreach (char ch in input)
-            output += cipher(ch, key);
-
-        return output;
-    }
-
-    public static string Decipher(string input, int key)
-    {
-        return Encipher(input, 26 - key);
-    }
-
-    public static int DecryptInt(int input)
-    {
-        return 214748364 % input;
-    }
-
     #region UI
 
     public static int GetColor(Achievement achievement)
@@ -649,7 +582,6 @@ public static class Main
     {
         if (achievement.unlocked)
         {
-            //modLogger.LogInfo("Achievement already unlocked " + achievement.name + " " + achievement.idx);
             return;
         }
         AchievementPopup(achievement);
@@ -658,224 +590,6 @@ public static class Main
         achievement.unlocked = true;
         unlockedDict[achievement.idx] = true;
         PrefsHelper.SaveDict(unlockedDict);
-    }
-
-    public static bool isMonument(ImprovementData.Type type)
-    {
-        return type == ImprovementData.Type.Monument1 || type == ImprovementData.Type.Monument2 || type == ImprovementData.Type.Monument3 || type == ImprovementData.Type.Monument4 || type == ImprovementData.Type.Monument5 || type == ImprovementData.Type.Monument6 || type == ImprovementData.Type.Monument7;
-    }
-
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(BuildAction), nameof(BuildAction.ExecuteDefault))]
-    public static void BuildAchievements(BuildAction __instance, GameState gameState)
-    {
-
-        if (__instance.PlayerId != GameManager.LocalPlayer.Id)
-        {
-            return;
-        }
-        if (__instance.Type == ImprovementData.Type.Monument2 && gameState.Settings.Difficulty != BotDifficulty.Easy)
-        {
-            Main.GrantAchievement(Achievements[geniusidx]);
-        }
-        if (__instance.Type == ImprovementData.Type.Farm)
-        {
-            Main.GrantAchievement(Achievements[farmingidx]);
-        }
-        if (Main.isMonument(__instance.Type))
-        {
-            List<ImprovementData.Type> list = new List<ImprovementData.Type>
-            {
-                ImprovementData.Type.Farm
-            };
-            foreach (var item in ActionUtils.GetCityArea(gameState, gameState.Map.GetTile(gameState.Map.GetTile(__instance.Coordinates).rulingCityCoordinates)))
-            {
-                if (item != null && item.improvement != null)
-                {
-                    if (Main.isMonument(item.improvement.type) && !list.Contains(item.improvement.type))
-                    {
-                        list.Add(item.improvement.type);
-                    }
-                }
-            }
-            if (list.Count > 7) // >=8, since we have the dummy farm
-            {
-                Main.GrantAchievement(Achievements[cowidx]);
-            }
-        }
-    }
-
-    // Some achievements are checked at the start of each turn
-
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(StartTurnAction), nameof(StartTurnAction.ExecuteDefault))]
-    public static void StartTurnCheck(StartTurnAction __instance, GameState gameState)
-    {
-        PlayerState player;
-        gameState.TryGetPlayer(__instance.PlayerId, out player);
-        if (player.AutoPlay)
-        {
-            return;
-        }
-
-
-
-        int veterancounter = 0;
-        int SECRETcounter1 = 0;
-        int cartographycounter = 0;
-
-
-        List<UnitData.Type> units = new List<UnitData.Type>();
-
-        foreach (var tile in gameState.Map.Tiles)
-        {
-            if (tile.GetExplored(player.Id))
-            {
-                cartographycounter++;
-            }
-            if (tile.unit != null)
-            {
-                if (tile.unit.owner == player.Id)
-                {
-                    units.Add(tile.unit.type);
-                    if (tile.unit.promotionLevel == 1)
-                    {
-                        veterancounter++;
-                    }
-                    if (player.tribe == EnumCache<PolytopiaBackendBase.Common.TribeType>.GetType(Main.Decipher("jqqftkem", 2)) && gameState.Settings.OpponentCount > 1)
-                    {
-                        if (tile.unit.type == EnumCache<UnitData.Type>.GetType(Main.Decipher("ctejgt", 2)))
-                        {
-                            SECRETcounter1++;
-                        }
-                        else SECRETcounter1 = int.MinValue;
-                    }
-                    if (tile.unit.HasEffect(UnitEffect.Boosted) && tile.unit.HasEffect(UnitEffect.Poisoned) && tile.unit.HasEffect(UnitEffect.Frozen) && tile.unit.promotionLevel == 1 && !Achievements[howdidweidx].unlocked)
-                    {
-                        Main.GrantAchievement(Achievements[howdidweidx]);
-                    }
-                }
-            }
-            if (tile.improvement != null)
-            {
-                if (tile.improvement.owner == player.Id)
-                {
-                    if (tile.improvement.type == ImprovementData.Type.City)
-                    {
-                        Main.modLogger.LogMessage("Park count for city " + tile.improvement.name + " " + tile.improvement.RewardCount(CityReward.Park));
-                        if (tile.improvement.RewardCount(CityReward.Park) >= 5)
-                        {
-                            Main.GrantAchievement(Achievements[parkidx]);
-                        }
-                    }
-                }
-            }
-        }
-        if (veterancounter >= 3 && !Achievements[veteranidx].unlocked)
-        {
-            Main.GrantAchievement(Achievements[veteranidx]);
-        }
-
-        if (SECRETcounter1 >= DecryptInt(214748354) && !Achievements[secret1idx].unlocked)
-        {
-            Main.GrantAchievement(Achievements[secret1idx]);
-        }
-
-        if (gameState.CurrentTurn <= 10 && gameState.Settings.mapPreset == MapPreset.Dryland)
-        {
-            if (player.HasTech(TechData.Type.Aquatism) && player.HasTech(TechData.Type.Navigation))
-            {
-                Main.GrantAchievement(Achievements[sdachidx]);
-            }
-        }
-
-        if (units.Contains(UnitData.Type.Giant) && units.Contains(UnitData.Type.Crab) && units.Contains(UnitData.Type.FireDragon) && units.Contains(UnitData.Type.Gaami) && units.Contains(UnitData.Type.Centipede))
-        {
-            Main.GrantAchievement(Achievements[stachidx]);
-        }
-
-        int embassies = 0;
-        foreach (var item in gameState.PlayerStates)
-        {
-            if (player != item)
-            {
-                if (item.GetRelation(player.Id).EmbassyLevel > 0)
-                {
-                    embassies++;
-                }
-            }
-        }
-        if (embassies >= 4 && gameState.Settings.Difficulty != BotDifficulty.Easy)
-        {
-            Main.GrantAchievement(Achievements[diplomatidx]);
-        }
-
-        if (gameState.CurrentTurn < 20 && gameState.Settings.Difficulty == BotDifficulty.Crazy && gameState.Settings.OpponentCount > 0 && ResourceDataUtils.CalculateIncomeFor(gameState, player.Id) >= 50)
-        {
-            Main.GrantAchievement(Achievements[economyidx]);
-        }
-
-        modLogger.LogMessage(cartographycounter + " " + gameState.Settings.MapSize);
-        if (cartographycounter >= (gameState.Settings.MapSize * gameState.Settings.MapSize ) && (gameState.Settings.MapSize * gameState.Settings.MapSize ) >= 324)
-        {
-            Main.GrantAchievement(Achievements[cartographyidx]);
-        }
-
-    }
-
-    //Mindbend a giant
-
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(ConvertAction), nameof(ConvertAction.ExecuteDefault))]
-    public static void Yoinkers(ConvertAction __instance, GameState gameState)
-    {
-        TileData tile = gameState.Map.GetTile(__instance.Origin);
-        TileData tile2 = gameState.Map.GetTile(__instance.Target);
-        UnitState unit = tile.unit;
-        UnitState unit2 = tile2.unit;
-        if (unit == null || unit2 == null || unit.owner != GameManager.LocalPlayer.Id)
-        {
-            return;
-        }
-
-
-        if (unit2.type == UnitData.Type.Giant)
-        {
-            Main.GrantAchievement(Achievements[yoinkidx]);
-        }
-    }
-
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(WipePlayerAction), nameof(WipePlayerAction.ExecuteDefault))]
-    public static void WipePlayerAction_ExecuteDefault(WipePlayerAction __instance, GameState state)
-    {
-
-        if (__instance.PlayerId == GameManager.LocalPlayer.Id)
-        {
-            Main.GrantAchievement(Achievements[wipeidx]);
-            if (state.CurrentTurn < 5)
-            {
-                Main.GrantAchievement(Achievements[welcomeidx]);
-            }
-        }
-    }
-
-    [HarmonyPostfix]
-    [HarmonyPatch(typeof(GameOverAction), nameof(GameOverAction.Execute))]
-    public static void GameOverAction_Execute(GameOverAction __instance, GameState state)
-    {
-        if (__instance.WinningPlayerId == GameManager.LocalPlayer.Id)
-        {
-            Main.GrantAchievement(Achievements[firstwinidx]);
-            if (state.Settings.Difficulty == BotDifficulty.Crazy)
-            {
-                Main.GrantAchievement(Achievements[crazywinidx]);
-                if (state.Settings.mapPreset == MapPreset.WaterWorld && state.Settings.OpponentCount >= 15)
-                {
-                    Main.GrantAchievement(Achievements[vengirwateridx]);
-                }
-            }
-        }
     }
 
     #endregion
