@@ -145,7 +145,7 @@ public static class Main
         new Achievement(){
             idx = 6,
             name = "City of Wonders",
-            description = "Build all Monuments in a single city."
+            description = "Build 7 Monuments in a single city."
         },
 
         new Achievement(){
@@ -346,6 +346,17 @@ public static class Main
             }
         }
         return -1;
+    }
+
+
+    public static List<T> ToSystemList<T>(Il2CppSystem.Collections.Generic.List<T> il2cppList)
+    {
+        var sysList = new List<T>(il2cppList.Count);
+        for (int i = 0; i < il2cppList.Count; i++)
+        {
+            sysList.Add(il2cppList[i]);
+        }
+        return sysList;
     }
     #endregion
 
@@ -614,16 +625,54 @@ public static class Main
 
     #region Common Events
 
-    public static void ImprovementAcquired(GameState state, WorldCoordinates coordinates, byte player, ImprovementData.Type type, string reason)
+    public static void ImprovementAcquired(GameState gameState, WorldCoordinates coordinates, byte player, ImprovementData.Type type, string reason)
     {
+        TileData tile = gameState.Map.GetTile(coordinates);
+        TileData citytile = gameState.Map.GetTile(tile.rulingCityCoordinates);
+
         if(player == GameManager.LocalPlayer.Id)
         {
             if(reason == "build")
             {
                 if(type == ImprovementData.Type.Farm) GrantAchievement(GetAchievement("Agriculture"));
+                if (type.IsMonument() && CounterThroughTiles(ToSystemList(ActionUtils.GetCityArea(gameState, citytile)), TileHasMonument) > 6)
+                {
+                    GrantAchievement(GetAchievement("City of Wonders"));
+                }
             }
         }
     }
+
+    #endregion
+
+    #region Event Utils
+
+    public static int CounterThroughTiles(List<TileData> tiles, Func<TileData, int> filter)
+    {
+        int sum = 0;
+        foreach(var tile in tiles)
+        {
+            sum += filter(tile);
+        }
+        return sum;
+    }
+
+    public static int CounterThroughTiles(List<WorldCoordinates> tiles, Func<TileData, int> filter)
+    {
+        List<TileData> tileList = new();
+        foreach(var tile in tiles)
+        {
+            tileList.Add(GameManager.GameState.Map.GetTile(tile));
+        }
+        return CounterThroughTiles(tileList, filter);
+    }
+
+    public static int TileHasMonument(TileData tile)
+    {
+        if(tile.improvement != null && tile.improvement.IsMonument()) return 1;
+        else return 0;
+    }
+
 
     #endregion
 
