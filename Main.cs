@@ -629,7 +629,15 @@ public static class Main
     public static void ConvertAction_ExecuteDefault(ConvertAction __instance, GameState gameState)
     {
         TileData tile = gameState.Map.GetTile(__instance.Target);
-        if(tile.unit != null && tile.unit.promotionLevel > 0) VeteranAcquired(gameState, tile.coordinates, __instance.PlayerId, "convert");
+        if(TileHasVeteran(tile) == 1) VeteranAcquired(gameState, tile.coordinates, __instance.PlayerId, "convert");
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(ExamineRuinsAction), nameof(ExamineRuinsAction.ExecuteDefault))]
+    public static void ExamineRuinsAction_E(ExamineRuinsAction __instance, GameState gameState)
+    {
+        TileData tile = gameState.Map.GetTile(__instance.Coordinates);
+        if(TileHasVeteran(tile) == 1) VeteranAcquired(gameState, tile.coordinates, __instance.PlayerId, "ruin");
     }
 
     [HarmonyPostfix]
