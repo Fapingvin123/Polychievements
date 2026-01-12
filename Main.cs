@@ -4,6 +4,8 @@
 using BepInEx.Logging;
 //using EnumsNET;
 using HarmonyLib;
+using I2.Loc;
+
 //using Il2CppInterop.Runtime;
 //using Il2CppInterop.Runtime.InteropTypes.Arrays;
 //using Il2CppSystem;
@@ -21,6 +23,7 @@ using UnityEngine;
 //using UnityEngine.UIElements.UIR;
 //using System.Reflection;
 using UnityEngine.EventSystems;
+using UnityEngine.Rendering.RenderGraphModule.NativeRenderPassCompiler;
 //using Il2CppMicrosoft.Extensions.DependencyInjection;
 
 namespace test;
@@ -29,7 +32,7 @@ namespace test;
 
 public class Achievement
 {
-    public int idx;
+    public string idx;
     public string name;
     public string description;
     public bool unlocked = false;
@@ -40,15 +43,15 @@ public class Achievement
 public static class PrefsHelper
 {
     private const string Key = "Polychievements";
-    public static Dictionary<int, bool> CreateDefault()
+    public static Dictionary<string, bool> CreateDefault()
     {
-        var dict = new Dictionary<int, bool>();
-        for (int i = 0; i <= Main.Achievements.Count; i++)
-            dict[i] = false;
+        var dict = new Dictionary<string, bool>();
+        for (int i = 0; i < Main.Achievements.Count; i++)
+            dict[Main.Achievements[i].idx] = false;
         return dict;
     }
 
-    public static void SaveDict(Dictionary<int, bool> dict)
+    public static void SaveDict(Dictionary<string, bool> dict)
     {
         var parts = new List<string>();
         foreach (var kvp in dict)
@@ -59,12 +62,13 @@ public static class PrefsHelper
         PlayerPrefs.Save();
     }
 
-    public static Dictionary<int, bool> LoadDict()
+    public static Dictionary<string, bool> LoadDict()
     {
-        if (!PlayerPrefs.HasKey(Key))
-            return CreateDefault();
-
         var dict = CreateDefault();
+
+        if (!PlayerPrefs.HasKey(Key))
+            return dict;
+
         string encoded = PlayerPrefs.GetString(Key);
 
         foreach (var entry in encoded.Split(';'))
@@ -76,15 +80,13 @@ public static class PrefsHelper
             if (kv.Length != 2)
                 continue;
 
-            var kStr = kv[0].Trim();
-            var vStr = kv[1].Trim();
+            string key = kv[0].Trim();
+            string value = kv[1].Trim();
 
-            if (!int.TryParse(kStr, out int key))
-                continue;
-            if (!int.TryParse(vStr, out int val))
+            if (!int.TryParse(value, out int val))
                 continue;
 
-            if (key < 0 || key > Main.Achievements.Count)
+            if (!dict.ContainsKey(key))
                 continue;
 
             dict[key] = val != 0;
@@ -97,7 +99,7 @@ public static class PrefsHelper
 
 public static class Main
 {
-    private static Dictionary<int, bool> unlockedDict;
+    private static Dictionary<string, bool> unlockedDict;
     public static int AchViewMode = 0;
 
     public static List<Achievement> Achievements = new List<Achievement>()
@@ -105,51 +107,51 @@ public static class Main
         /////////////////////////
         /// EASY
         /////////////////////////
-        new Achievement(){
-            idx = 0,
-            name = "Agriculture",
-            description = "Build a farm."
+        new Achievement(){ 
+            idx = "agriculture",
+            name = "ach.agriculture", // Implemented!
+            description = "ach.agriculture.desc"
         },
 
         new Achievement(){
-            idx = 1,
-            name = "Experienced Army",
+            idx = "veterans",
+            name = "Experienced Army", // Implemented?
             description = "Own 3 veteran units."
         },
 
         new Achievement(){
-            idx = 2,
+            idx = "blood",
             name = "Blood!",
             description = "Eradicate a tribe."
         },
 
         new Achievement(){
-            idx = 3,
+            idx = "unseen",
             name = "We Move Unseen",
             description = "Have three unrevealed cloaks in enemy territory.",
             category = 0
         },
 
         new Achievement(){
-            idx = 4,
+            idx = "win",
             name = "First Win!",
             description = "Win a game."
         },
 
         new Achievement(){
-            idx = 5,
+            idx = "cartography",
             name = "Cartography",
             description = "Reveal all tiles in a Large map or bigger."
         },
 
         new Achievement(){
-            idx = 6,
-            name = "City of Wonders",
+            idx = "cow",
+            name = "City of Wonders", // Implemented!
             description = "Build 7 Monuments in a single city."
         },
 
         new Achievement(){
-            idx = 7,
+            idx = "dopilus",
             name = "All roads lead to Dopilus",
             hiddenDesc = true,
             description = "Playing as Imperius, have half of the worlds' cities connected to your capital."
@@ -157,7 +159,7 @@ public static class Main
 
         new Achievement()
         {
-            idx = 8,
+            idx = "colony",
             name = "Colonizer",
             description = "Have at least 1 city from all other tribes on a Large map or bigger."
         },
@@ -169,21 +171,21 @@ public static class Main
         
 
         new Achievement(){
-            idx = 9,
+            idx = "yoink",
             name = "Yoink!",
             description = "Mindbend a giant.",
             category = 1
         },
 
         new Achievement(){
-            idx = 10,
+            idx = "green",
             name = "Green City",
             description = "Have 5 parks in a city you own.",
             category = 1
         },
 
         new Achievement(){
-            idx = 11,
+            idx = "hypno",
             name = "Hypnotist",
             hiddenDesc = true,
             description = "Convert a mindbender with a mindbender.",
@@ -191,35 +193,35 @@ public static class Main
         },
 
         new Achievement(){
-            idx = 12,
+            idx = "serious",
             name = "Serious Dedication",
             description = "Research Aquatism and Navigation on a Drylands map by turn 10.",
             category = 1
         },
 
         new Achievement(){
-            idx = 13,
+            idx = "crazy",
             name = "Crazy good!",
             description = "Win a Crazy difficulty game.",
             category = 1
         },
 
         new Achievement(){
-            idx = 14,
+            idx = "diplomat",
             name = "The Diplomat",
             description = "Have an embassy in at least 4 tribes' capitals on at least Normal difficulty.",
             category = 1
         },
 
         new Achievement(){
-            idx = 15,
+            idx = "terrorknight",
             name = "Knight of Terror",
             description = "Own a knight that has killed more than 10 units.",
             category = 1
         },
 
         new Achievement(){
-            idx = 16,
+            idx = "lifeashore",
             name = "Life Ashore",
             description = "Win a Waterworld or Archipelago map without researching Aquatism or Navigation on Normal or harder difficulty.",
             category = 1
@@ -230,21 +232,21 @@ public static class Main
         /////////////////////////
 
         new Achievement(){
-            idx = 17,
+            idx = "howdidwe",
             name = "How did we get here?",
             description = "Have a Poisoned, Frozen, Speedy, Veteran unit.",
             category = 2
         },
 
         new Achievement(){
-            idx = 18,
+            idx = "superteam",
             name = "Super Team",
             description = "Own a Giant, a Crab, a Dragon, a Gaami and a Centipede.",
             category = 2
         },
 
         new Achievement(){
-            idx = 19,
+            idx = "houdini",
             name = "Houdini",
             description = "Kill a unit sieging your city by spawning a Super Unit in the city, with no available tiles for the attacker to move.",
             hiddenDesc = true,
@@ -252,21 +254,21 @@ public static class Main
         },
 
         new Achievement(){
-            idx = 20,
+            idx = "vengirwater",
             name = "Vengir Waterworld",
             description = "Win a Crazy difficulty Waterworld game with Vengir, playing against 15 bots.",
             category = 2
         },
 
         new Achievement(){
-            idx = 21,
-            name = "A welcomed neighbor",
+            idx = "welcomeneigh",
+            name = "A welcomed neighbour",
             description = "Eradicate a tribe before turn 5.",
             category = 2
         },
 
         new Achievement(){
-            idx = 22,
+            idx = "atlantis",
             name = "Atlantis",
             hiddenDesc = true,
             description = "Have an island city reach level 10.",
@@ -274,14 +276,14 @@ public static class Main
         },
 
         new Achievement(){
-            idx = 23,
+            idx = "economist",
             name = "Economist",
             description = "Have 50 income before reaching turn 20 with at least 1 crazy AI opponent.",
             category = 2
         },
 
         new Achievement(){
-            idx = 24,
+            idx = "fakediplomat",
             name = "The \"Diplomat\"",
             description = "Gain 50 stars in turn from infiltrating enemy cities.",
             category = 2
@@ -296,7 +298,6 @@ public static class Main
     /// <param name="achievement"></param>
     public static bool AddAchievementRunTime(Achievement achievement)
     {
-        achievement.idx = string.Concat(achievement.name, achievement.description).GetHashCode(); //done so that no matter the order, indexing stays consistent
         if(GetAchievement(achievement.idx) != null)
         {
             modLogger.LogFatal("Error adding achievement at runtime! Index already exists, change description or name of achievement "+achievement.name);
@@ -308,7 +309,7 @@ public static class Main
         return true;
     }
 
-    public static int GetAchievementIdx(string title)
+    public static string GetAchievementIdx(string title)
     {
         foreach (var ach in Achievements)
         {
@@ -317,10 +318,10 @@ public static class Main
                 return ach.idx;
             }
         }
-        return -1;
+        return string.Empty;
     }
 
-    public static Achievement GetAchievement(int idx)
+    public static Achievement GetAchievement(string idx)
     {
         foreach (var ach in Achievements)
         {
@@ -332,11 +333,7 @@ public static class Main
         return null;
     }
 
-    public static Achievement GetAchievement(string title)
-    {
-        return Achievements[GetAchievementLocation(GetAchievementIdx(title))];
-    }
-    public static int GetAchievementLocation(int idx) // Ideally return value is the same as input value but better be safe
+    public static int GetAchievementLocation(string idx)
     {
         for (int i = 0; i < Achievements.Count; i++)
         {
@@ -375,7 +372,7 @@ public static class Main
 
         foreach (var ach in Achievements)
         {
-            Achievements[ach.idx].unlocked = unlockedDict[ach.idx];
+            ach.unlocked = unlockedDict[ach.idx];
         }
 
     }
@@ -459,10 +456,10 @@ public static class Main
         {
             BasicPopup popup = PopupManager.GetBasicPopup();
             var achi = Achievements[id];
-            popup.Header = achi.name;
-            string unlockedis = achi.unlocked ? "Unlocked." : "Not unlocked.";
-            if (!(achi.hiddenDesc && !achi.unlocked)) popup.Description = achi.description + "\n\n" + unlockedis;
-            else popup.Description = "???\n\nUnlocked: " + achi.unlocked.ToString();
+            popup.Header = Localization.Get(achi.name);
+            string unlockedis = achi.unlocked ? Localization.Get("ach.ui.unlocked") : Localization.Get("ach.ui.notunlocked");
+            if (!(achi.hiddenDesc && !achi.unlocked)) popup.Description = Localization.Get(achi.description) + "\n\n" + unlockedis;
+            else popup.Description = "???\n\n" + unlockedis;
             List<PopupBase.PopupButtonData> popupButtons = new()
             {
                 new("buttons.ok")
@@ -474,8 +471,8 @@ public static class Main
             void ungrant(int id, BaseEventData eventData)
             {
                 BasicPopup pop1 = PopupManager.GetBasicPopup();
-                pop1.Header = "Are you sure?";
-                pop1.Description = "Do you really want to reset this achievement? You would have to earn it again to have it unlocked!";
+                pop1.Header = Localization.Get("ach.ui.usure");
+                pop1.Description = Localization.Get("ach.ui.usure2");
                 List<PopupBase.PopupButtonData> popupButtons1 = new()
                 {
                     new("buttons.nevermindachi"),
@@ -514,7 +511,7 @@ public static class Main
             {
                 if (ach.category == AchViewMode)
                 {
-                    CreatePlayerButton(__instance, gameState, ach.name, "achievement", ach.idx, Main.GetColor(ach), ref num);
+                    CreatePlayerButton(__instance, gameState, Localization.Get(ach.name), "achievement", GetAchievementLocation(ach.idx), Main.GetColor(ach), ref num);
                 }
             }
             __instance.gridLayout.spacing = new Vector2(__instance.gridLayout.spacing.x, num + 30f);
@@ -545,13 +542,13 @@ public static class Main
             __instance.selectViewmodePopup = PopupManager.GetSelectViewmodePopup();
             if (AchViewMode == 0)
             {
-                __instance.selectViewmodePopup.Header = "Easy Achievements";
+                __instance.selectViewmodePopup.Header = Localization.Get("ach.ui.easy");
             }
             else if (AchViewMode == 1)
             {
-                __instance.selectViewmodePopup.Header = "Medium Achievements";
+                __instance.selectViewmodePopup.Header = Localization.Get("ach.ui.medium");;
             }
-            else __instance.selectViewmodePopup.Header = "Hard Achievements";
+            else __instance.selectViewmodePopup.Header = Localization.Get("ach.ui.hard");;
             __instance.selectViewmodePopup.SetData(GameManager.GameState);
             __instance.selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
             {
@@ -568,21 +565,21 @@ public static class Main
             {
                 Main.AchViewMode = 0;
                 __instance.selectViewmodePopup.SetData(GameManager.GameState);
-                __instance.selectViewmodePopup.Header = "Easy Achievements";
+                __instance.selectViewmodePopup.Header = Localization.Get("ach.ui.easy");
                 __instance.Update();
             }
             void medium(int id, BaseEventData eventData)
             {
                 Main.AchViewMode = 1;
                 __instance.selectViewmodePopup.SetData(GameManager.GameState);
-                __instance.selectViewmodePopup.Header = "Medium Achievements";
+                __instance.selectViewmodePopup.Header = Localization.Get("ach.ui.medium");
                 __instance.Update();
             }
             void hard(int id, BaseEventData eventData)
             {
                 Main.AchViewMode = 2;
                 __instance.selectViewmodePopup.SetData(GameManager.GameState);
-                __instance.selectViewmodePopup.Header = "Hard Achievements";
+                __instance.selectViewmodePopup.Header = Localization.Get("ach.ui.hard");
                 __instance.Update();
             }
             __instance.selectViewmodePopup.Show(__instance.viewmodeSelectButton.rectTransform.position);
@@ -620,10 +617,50 @@ public static class Main
         ImprovementAcquired(gameState, __instance.Coordinates, __instance.PlayerId, __instance.Type, "build");
     }
 
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(PromoteAction), nameof(PromoteAction.ExecuteDefault))]
+    public static void PromoteAction_ExecuteDefault(PromoteAction __instance, GameState state)
+    {
+        VeteranAcquired(state, __instance.Coordinates, __instance.PlayerId, "promote");
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(ConvertAction), nameof(ConvertAction.ExecuteDefault))]
+    public static void ConvertAction_ExecuteDefault(ConvertAction __instance, GameState gameState)
+    {
+        TileData tile = gameState.Map.GetTile(__instance.Target);
+        if(tile.unit != null && tile.unit.promotionLevel > 0) VeteranAcquired(gameState, tile.coordinates, __instance.PlayerId, "convert");
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(WipePlayerAction), nameof(WipePlayerAction.ExecuteDefault))]
+    public static void WipePlayerAction_ExecuteDefault(WipePlayerAction __instance, GameState state)
+    {
+        if(__instance.PlayerId == GameManager.LocalPlayer.Id) GrantAchievement(GetAchievement("blood"));
+    }
+
 
     #endregion
 
     #region Common Events
+
+    public static void VeteranAcquired(GameState gameState, WorldCoordinates coordinates, byte player, string reason)
+    {
+        TileData tile = gameState.Map.GetTile(coordinates);
+        List<TileData> maptiles = new();
+        foreach(var tile1 in gameState.Map.Tiles)
+        {
+            maptiles.Add(tile1);
+        }
+
+        if(player == GameManager.LocalPlayer.Id)
+        {
+            if(CounterThroughTiles(maptiles, TileHasVeteran) > 2)
+            {
+                GrantAchievement(GetAchievement("veterans"));
+            }
+        }
+    }
 
     public static void ImprovementAcquired(GameState gameState, WorldCoordinates coordinates, byte player, ImprovementData.Type type, string reason)
     {
@@ -634,10 +671,10 @@ public static class Main
         {
             if(reason == "build")
             {
-                if(type == ImprovementData.Type.Farm) GrantAchievement(GetAchievement("Agriculture"));
+                if(type == ImprovementData.Type.Farm) GrantAchievement(GetAchievement("agriculture"));
                 if (type.IsMonument() && CounterThroughTiles(ToSystemList(ActionUtils.GetCityArea(gameState, citytile)), TileHasMonument) > 6)
                 {
-                    GrantAchievement(GetAchievement("City of Wonders"));
+                    GrantAchievement(GetAchievement("cow"));
                 }
             }
         }
@@ -670,7 +707,13 @@ public static class Main
     public static int TileHasMonument(TileData tile)
     {
         if(tile.improvement != null && tile.improvement.IsMonument()) return 1;
-        else return 0;
+        return 0;
+    }
+
+    public static int TileHasVeteran(TileData tile)
+    {
+        if(tile.unit != null && tile.unit.promotionLevel >= 1) return 1;
+        return 0;
     }
 
 
@@ -679,7 +722,7 @@ public static class Main
     #region AchGranting
     public static void AchievementPopup(Achievement achievement)
     {
-        NotificationManager.Notify(achievement.description, achievement.name, PolyMod.Registry.GetSprite("achievement"));
+        NotificationManager.Notify(Localization.Get(achievement.description), Localization.Get(achievement.name), PolyMod.Registry.GetSprite("achievement"));
     }
     public static void GrantAchievement(Achievement achievement)
     {

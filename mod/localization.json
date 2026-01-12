@@ -8,6 +8,16 @@
     "buttons.hardach": {
         "English": "Hard"
     },
+    "ach.ui.easy": {
+        "English": "Easy Achievements"
+    },
+    "ach.ui.medium": {
+        "English": "Medium Achievements"
+    },
+    "ach.ui.hard": {
+        "English": "Hard Achievements"
+    },
+    
     "buttons.ungrant": {
         "English": "Reset Achievement"
     },
@@ -16,5 +26,24 @@
     },
     "buttons.absolutely": {
         "English": "ABSOLUTELY"
+    },
+    "ach.ui.unlocked": {
+        "English": "Unlocked."
+    },
+    "ach.ui.notunlocked": {
+        "English": "Not unlocked."
+    },
+    "ach.ui.usure": {
+        "English": "Are you sure?"
+    },
+    "ach.ui.usure2": {
+        "English": "Do you really want to reset this achievement? You would have to earn it again to have it unlocked!"
+    },
+
+    "ach.agriculture": {
+        "English": "Agriculture"
+    },
+    "ach.agriculture.desc": {
+        "English": "Build a farm."
     }
 }
