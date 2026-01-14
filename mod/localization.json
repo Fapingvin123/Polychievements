@@ -45,5 +45,11 @@
     },
     "ach.agriculture.desc": {
         "English": "Build a farm."
+    },
+    "ach.veterans":{
+        "English": "Experienced Army"
+    },
+    "ach.veterans.desc":{
+        "English": "Own 3 veteran units."
     }
 }

@@ -1,101 +1,11 @@
-//using System.ComponentModel;
-//using System.Globalization;
-//using System.Runtime.CompilerServices;
 using BepInEx.Logging;
-//using EnumsNET;
 using HarmonyLib;
-using I2.Loc;
-
-//using Il2CppInterop.Runtime;
-//using Il2CppInterop.Runtime.InteropTypes.Arrays;
-//using Il2CppSystem;
-//using Il2CppSystem.Linq.Expressions.Interpreter;
-//using JetBrains.Annotations;
 using Polytopia.Data;
-//using PolytopiaBackendBase.Auth;
 using PolytopiaBackendBase.Game;
-//using SevenZip.Compression.LZMA;
-//using Unity.Collections;
-//using Unity.Jobs;
-//using Unity.Mathematics;
 using UnityEngine;
-//using UnityEngine.Tilemaps;
-//using UnityEngine.UIElements.UIR;
-//using System.Reflection;
 using UnityEngine.EventSystems;
-using UnityEngine.Rendering.RenderGraphModule.NativeRenderPassCompiler;
-//using Il2CppMicrosoft.Extensions.DependencyInjection;
 
-namespace test;
-
-
-
-public class Achievement
-{
-    public string idx;
-    public string name;
-    public string description;
-    public bool unlocked = false;
-    public bool hiddenDesc = false;
-    public int category = 0;
-}
-
-public static class PrefsHelper
-{
-    private const string Key = "Polychievements";
-    public static Dictionary<string, bool> CreateDefault()
-    {
-        var dict = new Dictionary<string, bool>();
-        for (int i = 0; i < Main.Achievements.Count; i++)
-            dict[Main.Achievements[i].idx] = false;
-        return dict;
-    }
-
-    public static void SaveDict(Dictionary<string, bool> dict)
-    {
-        var parts = new List<string>();
-        foreach (var kvp in dict)
-            parts.Add($"{kvp.Key}={(kvp.Value ? 1 : 0)}");
-
-        string encoded = string.Join(";", parts);
-        PlayerPrefs.SetString(Key, encoded);
-        PlayerPrefs.Save();
-    }
-
-    public static Dictionary<string, bool> LoadDict()
-    {
-        var dict = CreateDefault();
-
-        if (!PlayerPrefs.HasKey(Key))
-            return dict;
-
-        string encoded = PlayerPrefs.GetString(Key);
-
-        foreach (var entry in encoded.Split(';'))
-        {
-            if (string.IsNullOrWhiteSpace(entry))
-                continue;
-
-            var kv = entry.Split('=');
-            if (kv.Length != 2)
-                continue;
-
-            string key = kv[0].Trim();
-            string value = kv[1].Trim();
-
-            if (!int.TryParse(value, out int val))
-                continue;
-
-            if (!dict.ContainsKey(key))
-                continue;
-
-            dict[key] = val != 0;
-        }
-
-        return dict;
-    }
-}
-
+namespace Polychievements;
 
 public static class Main
 {
@@ -115,8 +25,8 @@ public static class Main
 
         new Achievement(){
             idx = "veterans",
-            name = "Experienced Army", // Implemented?
-            description = "Own 3 veteran units."
+            name = "ach.veterans", // Implemented?
+            description = "ach.veterans.desc"
         },
 
         new Achievement(){
