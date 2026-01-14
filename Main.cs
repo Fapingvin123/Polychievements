@@ -17,35 +17,34 @@ public static class Main
         /////////////////////////
         /// EASY
         /////////////////////////
-        new Achievement(){ 
+        new Achievement(){
             idx = "agriculture",
             name = "ach.agriculture", // Implemented!
-            description = "ach.agriculture.desc"
+            description = "ach.agriculture.desc" // Build a farm
         },
 
         new Achievement(){
             idx = "veterans",
             name = "ach.veterans", // Implemented?
-            description = "ach.veterans.desc"
+            description = "ach.veterans.desc" // Own 3 veterans
         },
 
         new Achievement(){
             idx = "blood",
-            name = "Blood!",
-            description = "Eradicate a tribe."
+            name = "ach.blood", // Implemented?
+            description = "ach.blood.desc" // Eradicate a tribe.
         },
 
         new Achievement(){
             idx = "unseen",
-            name = "We Move Unseen",
-            description = "Have three unrevealed cloaks in enemy territory.",
-            category = 0
+            name = "ach.unseen", // Implemented?
+            description = "ach.unseen.desc" // Have three unrevealed cloaks in enemy territory.
         },
 
         new Achievement(){
             idx = "win",
-            name = "First Win!",
-            description = "Win a game."
+            name = "ach.win",
+            description = "ach.win.desc" // Win a game.
         },
 
         new Achievement(){
@@ -208,12 +207,12 @@ public static class Main
     /// <param name="achievement"></param>
     public static bool AddAchievementRunTime(Achievement achievement)
     {
-        if(GetAchievement(achievement.idx) != null)
+        if (GetAchievement(achievement.idx) != null)
         {
-            modLogger.LogFatal("Error adding achievement at runtime! Index already exists, change description or name of achievement "+achievement.name);
+            modLogger.LogFatal("Error adding achievement at runtime! Index already exists, change description or name of achievement " + achievement.name);
             return false;
         }
-        if(unlockedDict.TryGetValue(achievement.idx, out bool result)) achievement.unlocked = result;
+        if (unlockedDict.TryGetValue(achievement.idx, out bool result)) achievement.unlocked = result;
         else achievement.unlocked = false;
         Achievements.Add(achievement);
         return true;
@@ -308,7 +307,7 @@ public static class Main
         button.transform.parent = hudScreen.buttonBar.transform;
         button.OnClicked += action;
         List<UIRoundButton> list = buttonArray.ToList();
-        list.Insert(list.Count-2, button);
+        list.Insert(list.Count - 2, button);
         list.ToArray();
 
         if (description != null)
@@ -456,9 +455,9 @@ public static class Main
             }
             else if (AchViewMode == 1)
             {
-                __instance.selectViewmodePopup.Header = Localization.Get("ach.ui.medium");;
+                __instance.selectViewmodePopup.Header = Localization.Get("ach.ui.medium"); ;
             }
-            else __instance.selectViewmodePopup.Header = Localization.Get("ach.ui.hard");;
+            else __instance.selectViewmodePopup.Header = Localization.Get("ach.ui.hard"); ;
             __instance.selectViewmodePopup.SetData(GameManager.GameState);
             __instance.selectViewmodePopup.buttonData = new PopupBase.PopupButtonData[]
             {
@@ -539,7 +538,7 @@ public static class Main
     public static void ConvertAction_ExecuteDefault(ConvertAction __instance, GameState gameState)
     {
         TileData tile = gameState.Map.GetTile(__instance.Target);
-        if(TileHasVeteran(tile) == 1) VeteranAcquired(gameState, tile.coordinates, __instance.PlayerId, "convert");
+        if (TileHasVeteran(tile) == 1) VeteranAcquired(gameState, tile.coordinates, __instance.PlayerId, "convert");
     }
 
     [HarmonyPostfix]
@@ -547,14 +546,53 @@ public static class Main
     public static void ExamineRuinsAction_E(ExamineRuinsAction __instance, GameState gameState)
     {
         TileData tile = gameState.Map.GetTile(__instance.Coordinates);
-        if(TileHasVeteran(tile) == 1) VeteranAcquired(gameState, tile.coordinates, __instance.PlayerId, "ruin");
+        if (TileHasVeteran(tile) == 1) VeteranAcquired(gameState, tile.coordinates, __instance.PlayerId, "ruin");
     }
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(WipePlayerAction), nameof(WipePlayerAction.ExecuteDefault))]
     public static void WipePlayerAction_ExecuteDefault(WipePlayerAction __instance, GameState state)
     {
-        if(__instance.PlayerId == GameManager.LocalPlayer.Id) GrantAchievement(GetAchievement("blood"));
+        if (__instance.PlayerId == GameManager.LocalPlayer.Id) GrantAchievement(GetAchievement("blood"));
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(HideAction), nameof(HideAction.Execute))]
+    public static void HideAction_Execute(HideAction __instance, GameState state)
+    {
+        if (state.Map.GetTile(__instance.Coordinates).unit != null)
+        {
+            UnitHid(state, state.Map.GetTile(__instance.Coordinates).unit, __instance.PlayerId, "hide");
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(MoveAction), nameof(MoveAction.ExecuteDefault))]
+    public static void MoveAction_ExecuteDefault(MoveAction __instance, GameState gameState)
+    {
+        var success = gameState.TryGetUnit(__instance.UnitId, out UnitState unit);
+        if (success)
+        {
+            if (unit.HasAbility(UnitAbility.Type.Hide)) UnitHid(gameState, unit, __instance.PlayerId, "hide");
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(GameOverAction), nameof(GameOverAction.Execute))]
+    public static void GameOverAction_Execute(GameOverAction __instance, GameState state)
+    {
+        if (__instance.WinningPlayerId == GameManager.LocalPlayer.Id)
+        {
+            Main.GrantAchievement(GetAchievement("win"));
+            /*if (state.Settings.Difficulty == BotDifficulty.Crazy)
+            {
+                Main.GrantAchievement(GetAchievement("")); // crazy win index here
+                if (state.Settings.mapPreset == MapPreset.WaterWorld && state.Settings.OpponentCount >= 15)
+                {
+                    Main.GrantAchievement(GetAchievement("")); // VengirWaterWorld here? Also implement Vengir check
+                }
+            }*/
+        }
     }
 
 
@@ -562,18 +600,38 @@ public static class Main
 
     #region Common Events
 
+    public static void UnitHid(GameState gameState, UnitState unit, byte player, string reason)
+    {
+        TileData tile = gameState.Map.GetTile(unit.coordinates);
+        if (reason == "hide" && player == GameManager.LocalPlayer.Id)
+        {
+            if (!GetAchievement("unseen").unlocked)
+            {
+                int counter = 0;
+                foreach (var tile1 in gameState.Map.Tiles)
+                {
+                    if(tile1.unit != null && (tile1.unit.type == UnitData.Type.Cloak || tile1.unit.type == UnitData.Type.MermaidCloak) && tile1.unit.HasEffect(UnitEffect.Invisible) && tile1.rulingCityCoordinates != WorldCoordinates.NULL_COORDINATES && tile1.owner != player)
+                    {
+                        counter++;
+                    }
+                }
+                if (counter > 2) GrantAchievement(GetAchievement("unseen"));
+            }
+        }
+    }
+
     public static void VeteranAcquired(GameState gameState, WorldCoordinates coordinates, byte player, string reason)
     {
         TileData tile = gameState.Map.GetTile(coordinates);
         List<TileData> maptiles = new();
-        foreach(var tile1 in gameState.Map.Tiles)
+        foreach (var tile1 in gameState.Map.Tiles)
         {
             maptiles.Add(tile1);
         }
 
-        if(player == GameManager.LocalPlayer.Id)
+        if (player == GameManager.LocalPlayer.Id)
         {
-            if(CounterThroughTiles(maptiles, TileHasVeteran) > 2)
+            if (!GetAchievement("veterans").unlocked && CounterThroughTiles(maptiles, TileHasVeteran) > 2)
             {
                 GrantAchievement(GetAchievement("veterans"));
             }
@@ -585,11 +643,11 @@ public static class Main
         TileData tile = gameState.Map.GetTile(coordinates);
         TileData citytile = gameState.Map.GetTile(tile.rulingCityCoordinates);
 
-        if(player == GameManager.LocalPlayer.Id)
+        if (player == GameManager.LocalPlayer.Id)
         {
-            if(reason == "build")
+            if (reason == "build")
             {
-                if(type == ImprovementData.Type.Farm) GrantAchievement(GetAchievement("agriculture"));
+                if (type == ImprovementData.Type.Farm) GrantAchievement(GetAchievement("agriculture"));
                 if (type.IsMonument() && CounterThroughTiles(ToSystemList(ActionUtils.GetCityArea(gameState, citytile)), TileHasMonument) > 6)
                 {
                     GrantAchievement(GetAchievement("cow"));
@@ -605,7 +663,7 @@ public static class Main
     public static int CounterThroughTiles(List<TileData> tiles, Func<TileData, int> filter)
     {
         int sum = 0;
-        foreach(var tile in tiles)
+        foreach (var tile in tiles)
         {
             sum += filter(tile);
         }
@@ -615,7 +673,7 @@ public static class Main
     public static int CounterThroughTiles(List<WorldCoordinates> tiles, Func<TileData, int> filter)
     {
         List<TileData> tileList = new();
-        foreach(var tile in tiles)
+        foreach (var tile in tiles)
         {
             tileList.Add(GameManager.GameState.Map.GetTile(tile));
         }
@@ -624,13 +682,13 @@ public static class Main
 
     public static int TileHasMonument(TileData tile)
     {
-        if(tile.improvement != null && tile.improvement.IsMonument()) return 1;
+        if (tile.improvement != null && tile.improvement.IsMonument()) return 1;
         return 0;
     }
 
     public static int TileHasVeteran(TileData tile)
     {
-        if(tile.unit != null && tile.unit.promotionLevel >= 1) return 1;
+        if (tile.unit != null && tile.unit.promotionLevel >= 1) return 1;
         return 0;
     }
 

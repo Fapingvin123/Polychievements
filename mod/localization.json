@@ -1,55 +1,96 @@
 {
     "buttons.easyach": {
-        "English": "Easy"
+        "English": "Easy",
+        "Italian (Italy)": "Facile"
     },
     "buttons.mediumach": {
-        "English": "Medium"
+        "English": "Medium",
+        "Italian (Italy)": "Normale"
     },
     "buttons.hardach": {
-        "English": "Hard"
+        "English": "Hard",
+        "Italian (Italy)": "Difficile"
     },
     "ach.ui.easy": {
-        "English": "Easy Achievements"
+        "English": "Easy Achievements",
+        "Italian (Italy)": "Obiettivi Facili"
     },
     "ach.ui.medium": {
-        "English": "Medium Achievements"
+        "English": "Medium Achievements",
+        "Italian (Italy)": "Obiettivi Normali"
     },
     "ach.ui.hard": {
-        "English": "Hard Achievements"
+        "English": "Hard Achievements",
+        "Italian (Italy)": "Obiettivi Difficili"
     },
     
     "buttons.ungrant": {
-        "English": "Reset Achievement"
+        "English": "Reset Achievement",
+        "Italian (Italy)": "Azzerare Obiettivi"
     },
     "buttons.nevermindachi": {
-        "English": "Nevermind"
+        "English": "Nevermind",
+        "Italian (Italy)": "Cancellare"
     },
     "buttons.absolutely": {
-        "English": "ABSOLUTELY"
+        "English": "ABSOLUTELY",
+        "Italian (Italy)": "ASSOLUTAMENTE"
     },
     "ach.ui.unlocked": {
-        "English": "Unlocked."
+        "English": "Unlocked.",
+        "Italian (Italy)": "Sbloccato."
     },
     "ach.ui.notunlocked": {
-        "English": "Not unlocked."
+        "English": "Not unlocked.",
+        "Italian (Italy)": "Bloccato"
     },
     "ach.ui.usure": {
-        "English": "Are you sure?"
+        "English": "Are you sure?",
+        "Italian (Italy)": "Sei sicuro?"
     },
     "ach.ui.usure2": {
-        "English": "Do you really want to reset this achievement? You would have to earn it again to have it unlocked!"
+        "English": "Do you really want to reset this achievement? You would have to earn it again to have it unlocked!",
+        "Italian (Italy)": "Vuoi davvero azzerare questo obiettivo? Dovrai guadagnartelo di nuovo per sbloccarlo!"
     },
 
     "ach.agriculture": {
-        "English": "Agriculture"
+        "English": "Agriculture",
+        "Italian (Italy)": "Agricoltura"
     },
     "ach.agriculture.desc": {
-        "English": "Build a farm."
+        "English": "Build a farm.",
+        "Italian (Italy)": "Costruisci una fattoria."
     },
     "ach.veterans":{
-        "English": "Experienced Army"
+        "English": "Experienced Army",
+        "Italian (Italy)": "Esercito Esperto"
     },
     "ach.veterans.desc":{
-        "English": "Own 3 veteran units."
+        "English": "Own 3 veteran units.",
+        "Italian (Italy)": "Possiedi 3 unità veterane."
+    },
+    "ach.blood":{
+        "English": "Blood!",
+        "Italian (Italy)": "Sangue!"
+    },
+    "ach.blood.desc":{
+        "English": "Eradicate a tribe.",
+        "Italian (Italy)": "Distruggi una tribù."
+    },
+    "ach.unseen":{
+        "English": "We Move Unseen",
+        "Italian (Italy)": "Ci Muoviamo nell'Ombra"
+    },
+    "ach.unseen.desc":{
+        "English": "Have 3 unrevealed cloaks in enemy territory.",
+        "Italian (Italy)": "Hai 3 mantelli invisibili nel territorio nemico."
+    },
+    "ach.win":{
+        "English": "First Win!",
+        "Italian (Italy)": "Prima Vittoria!"
+    },
+    "ach.win.desc":{
+        "English": "Win a game.",
+        "Italian (Italy)": "Vinci una partita."
     }
 }
