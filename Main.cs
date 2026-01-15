@@ -4,13 +4,14 @@ using Polytopia.Data;
 using PolytopiaBackendBase.Game;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Tilemaps;
 
 namespace Polychievements;
 
 public static class Main
 {
     private static Dictionary<string, bool> unlockedDict;
-    public static int AchViewMode = 0;
+    private static int AchViewMode = 0;
 
     public static List<Achievement> Achievements = new List<Achievement>()
     {
@@ -19,43 +20,43 @@ public static class Main
         /////////////////////////
         new Achievement(){
             idx = "agriculture",
-            name = "ach.agriculture", // Implemented!
+            name = "ach.agriculture", // Implemented
             description = "ach.agriculture.desc" // Build a farm
         },
 
         new Achievement(){
             idx = "veterans",
-            name = "ach.veterans", // Implemented?
+            name = "ach.veterans", // Implemented
             description = "ach.veterans.desc" // Own 3 veterans
         },
 
         new Achievement(){
             idx = "blood",
-            name = "ach.blood", // Implemented?
+            name = "ach.blood", // Implemented
             description = "ach.blood.desc" // Eradicate a tribe.
         },
 
         new Achievement(){
             idx = "unseen",
-            name = "ach.unseen", // Implemented?
+            name = "ach.unseen", // Implemented
             description = "ach.unseen.desc" // Have three unrevealed cloaks in enemy territory.
         },
 
         new Achievement(){
             idx = "win",
-            name = "ach.win",
+            name = "ach.win", // Implemented
             description = "ach.win.desc" // Win a game.
         },
 
         new Achievement(){
             idx = "cartography",
-            name = "Cartography",
+            name = "Cartography", // Implemented ?
             description = "Reveal all tiles in a Large map or bigger."
         },
 
         new Achievement(){
             idx = "cow",
-            name = "City of Wonders", // Implemented!
+            name = "City of Wonders", // Implemented
             description = "Build 7 Monuments in a single city."
         },
 
@@ -81,7 +82,7 @@ public static class Main
 
         new Achievement(){
             idx = "yoink",
-            name = "Yoink!",
+            name = "Yoink!", // Implemented ?
             description = "Mindbend a giant.",
             category = 1
         },
@@ -95,7 +96,7 @@ public static class Main
 
         new Achievement(){
             idx = "hypno",
-            name = "Hypnotist",
+            name = "Hypnotist", // Implemented ?
             hiddenDesc = true,
             description = "Convert a mindbender with a mindbender.",
             category = 1
@@ -539,6 +540,9 @@ public static class Main
     {
         TileData tile = gameState.Map.GetTile(__instance.Target);
         if (TileHasVeteran(tile) == 1) VeteranAcquired(gameState, tile.coordinates, __instance.PlayerId, "convert");
+        if(gameState.Map.GetTile(__instance.Origin).unit != null && gameState.Map.GetTile(__instance.Origin).unit.type == UnitData.Type.MindBender)
+            UnitAcquired(gameState, tile.coordinates, __instance.PlayerId, "hypnotistconvert");
+        else UnitAcquired(gameState, tile.coordinates, __instance.PlayerId, "convert");
     }
 
     [HarmonyPostfix]
@@ -595,10 +599,36 @@ public static class Main
         }
     }
 
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(RevealAction), nameof(RevealAction.ExecuteDefault))]
+    public static void RevealAction_ExecuteDefault(RevealAction __instance, GameState gameState)
+    {
+        if (!GetAchievement("cartography").unlocked && Main.LargeMapOrBigger(gameState) && __instance.PlayerId == GameManager.LocalPlayer.Id)
+        {
+            bool flag = true;
+            foreach(TileData tile in gameState.Map.Tiles)
+            {
+                if (tile.GetExplored(__instance.PlayerId)) continue;
+                flag = false;
+                break;
+            }
+            if(flag) GrantAchievement(GetAchievement("cartography"));
+        }
+    }
+
 
     #endregion
 
     #region Common Events
+
+    public static void UnitAcquired(GameState gameState, WorldCoordinates coordinates, byte player, string reason)
+    {
+        TileData tile = gameState.Map.GetTile(coordinates);
+        if(tile == null || tile.unit == null) return;
+        UnitState unit = tile.unit;
+        if(reason == "convert" && unit.type == UnitData.Type.Giant) GrantAchievement(GetAchievement("yoink"));
+        if(reason == "hypnotistconvert" && unit.type == UnitData.Type.MindBender) GrantAchievement(GetAchievement("hypno"));
+    }
 
     public static void UnitHid(GameState gameState, UnitState unit, byte player, string reason)
     {
@@ -692,6 +722,11 @@ public static class Main
         return 0;
     }
 
+    public static bool LargeMapOrBigger(GameState gameState)
+    {
+        return gameState.Map.Width >= 18;
+    }
+
 
     #endregion
 
@@ -699,16 +734,12 @@ public static class Main
     public static void AchievementPopup(Achievement achievement)
     {
         NotificationManager.Notify(Localization.Get(achievement.description), Localization.Get(achievement.name), PolyMod.Registry.GetSprite("achievement"));
+        AudioManager.PlaySFX(SFXTypes.Achievement, PolytopiaBackendBase.Common.SkinType.Default, 1f, 1f, 1f);
     }
     public static void GrantAchievement(Achievement achievement)
     {
-        if (achievement.unlocked)
-        {
-            return;
-        }
+        if (achievement.unlocked) return;
         AchievementPopup(achievement);
-        AudioManager.PlaySFX(SFXTypes.Achievement, PolytopiaBackendBase.Common.SkinType.Default, 1f, 1f, 1f);
-
         achievement.unlocked = true;
         unlockedDict[achievement.idx] = true;
         PrefsHelper.SaveDict(unlockedDict);
