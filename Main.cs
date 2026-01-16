@@ -70,7 +70,7 @@ public static class Main
         new Achievement()
         {
             idx = "colony",
-            name = "Colonizer",
+            name = "Colonizer", // UNTESTED
             description = "Have at least 1 city from all other tribes on a Large map or bigger."
         },
 
@@ -535,6 +535,21 @@ public static class Main
 
     #region Common Triggers
     [HarmonyPostfix]
+    [HarmonyPatch(typeof(CaptureCityAction), nameof(CaptureCityAction.ExecuteDefault))]
+    public static void CaptureCityAction_ExecuteDefault(CaptureCityAction __instance, GameState gameState)
+    {
+        gameState.TryGetPlayer(__instance.PlayerId, out PlayerState playerState);
+        if(!GetAchievement("colony").unlocked && LargeMapOrBigger(gameState) && playerState.Id == GameManager.LocalPlayer.Id)
+        {
+            List<int> YourCities = new();
+            foreach(TileData city in playerState.GetCityTiles(gameState))
+                if(city.improvement != null && city.improvement.type == ImprovementData.Type.City) YourCities.Add((int)city.improvement.founder);
+            List<int> list = Enumerable.Range(1, gameState.Settings.OpponentCount+1).ToList();
+            if(ListContainsList(YourCities, list)) GrantAchievement(GetAchievement("colony"));
+        }
+    }
+
+    [HarmonyPostfix]
     [HarmonyPatch(typeof(BuildAction), nameof(BuildAction.ExecuteDefault))]
     public static void BuildAction_ExecuteDefault(BuildAction __instance, GameState gameState)
     {
@@ -628,15 +643,15 @@ public static class Main
     }
 
     [HarmonyPostfix]
-    [HarmonyPatch(typeof(RevealAction), nameof(RevealAction.ExecuteDefault))]
-    public static void RevealAction_ExecuteDefault(RevealAction __instance, GameState gameState)
+    [HarmonyPatch(typeof(TileData), nameof(TileData.SetExplored))]
+    public static void RevealAction_ExecuteDefault(TileData __instance, byte playerId, bool explored)
     {
-        if (!GetAchievement("cartography").unlocked && Main.LargeMapOrBigger(gameState) && __instance.PlayerId == GameManager.LocalPlayer.Id)
+        if (explored && !GetAchievement("cartography").unlocked && Main.LargeMapOrBigger(GameManager.GameState) && playerId == GameManager.LocalPlayer.Id)
         {
             bool flag = true;
-            foreach(TileData tile in gameState.Map.Tiles)
+            foreach(TileData tile in GameManager.GameState.Map.Tiles)
             {
-                if (tile.GetExplored(__instance.PlayerId)) continue;
+                if (tile.GetExplored(playerId)) continue;
                 flag = false;
                 break;
             }
@@ -653,8 +668,9 @@ public static class Main
     {
         TileData tile = gameState.Map.GetTile(coordinates);
         if(tile == null || tile.unit == null) return;
+        if(player != GameManager.LocalPlayer.Id) return;
         UnitState unit = tile.unit;
-        if(reason == "convert" && unit.type == UnitData.Type.Giant) GrantAchievement(GetAchievement("yoink"));
+        if(reason == "hypnotistconvert" && unit.type == UnitData.Type.Giant) GrantAchievement(GetAchievement("yoink"));
         if(reason == "hypnotistconvert" && unit.type == UnitData.Type.MindBender) GrantAchievement(GetAchievement("hypno"));
         if(!GetAchievement("superteam").unlocked && IsSuperUnit(unit.type))
         {
