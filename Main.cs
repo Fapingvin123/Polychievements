@@ -50,7 +50,7 @@ public static class Main
 
         new Achievement(){
             idx = "cartography",
-            name = "Cartography", // Implemented ?
+            name = "Cartography", // UNTESTED
             description = "Reveal all tiles in a Large map or bigger."
         },
 
@@ -82,7 +82,7 @@ public static class Main
 
         new Achievement(){
             idx = "yoink",
-            name = "Yoink!", // Implemented ?
+            name = "Yoink!", // UNTESTED
             description = "Mindbend a giant.",
             category = 1
         },
@@ -96,7 +96,7 @@ public static class Main
 
         new Achievement(){
             idx = "hypno",
-            name = "Hypnotist", // Implemented ?
+            name = "Hypnotist", // UNTESTED
             hiddenDesc = true,
             description = "Convert a mindbender with a mindbender.",
             category = 1
@@ -150,7 +150,7 @@ public static class Main
 
         new Achievement(){
             idx = "superteam",
-            name = "Super Team",
+            name = "Super Team", // UNTESTED
             description = "Own a Giant, a Crab, a Dragon, a Gaami and a Centipede.",
             category = 2
         },
@@ -264,6 +264,20 @@ public static class Main
             sysList.Add(il2cppList[i]);
         }
         return sysList;
+    }
+
+    public static bool ListContainsList<T>(List<T> origin, List<T> values)
+    {
+        if(origin == null || values == null) return false;
+        var dict = new Dictionary<T, bool>();
+        foreach(var value in values)
+            dict.TryAdd(value, false);
+        foreach(var element in origin)
+        {
+            if(dict.ContainsKey(element)) dict[element] = true;
+        }
+        foreach(var kvp in dict) if (!kvp.Value) return false;
+        return true;
     }
     #endregion
 
@@ -535,6 +549,20 @@ public static class Main
     }
 
     [HarmonyPostfix]
+    [HarmonyPatch(typeof(ActionUtils), nameof(ActionUtils.TrainUnit))]
+    public static void ActionUtils_TrainUnit(GameState gameState, PlayerState playerState, TileData tile, UnitData unitData)
+    {
+        UnitAcquired(gameState, tile.coordinates, playerState.Id, "trainunit");
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(typeof(ActionUtils), nameof(ActionUtils.TrainUnitOnOccupiedSpace))]
+    public static void ActionUtils_TrainUnitOnOccupiedSpace(GameState gameState, byte playerId, UnitData.Type unitType, TileData tile)
+    {
+        UnitAcquired(gameState, tile.coordinates, playerId, "trainunitoccupied");
+    }
+
+    [HarmonyPostfix]
     [HarmonyPatch(typeof(ConvertAction), nameof(ConvertAction.ExecuteDefault))]
     public static void ConvertAction_ExecuteDefault(ConvertAction __instance, GameState gameState)
     {
@@ -628,6 +656,15 @@ public static class Main
         UnitState unit = tile.unit;
         if(reason == "convert" && unit.type == UnitData.Type.Giant) GrantAchievement(GetAchievement("yoink"));
         if(reason == "hypnotistconvert" && unit.type == UnitData.Type.MindBender) GrantAchievement(GetAchievement("hypno"));
+        if(!GetAchievement("superteam").unlocked && IsSuperUnit(unit.type))
+        {
+            List<UnitData.Type> units = new();
+            foreach(TileData tile1 in gameState.Map.Tiles)
+            {
+                if(tile1 != null && tile1.unit != null && tile1.unit.owner == player) units.Add(tile1.unit.type);
+            }
+            if(ListContainsList(units, SUPER_UNITS)) GrantAchievement(GetAchievement("superteam"));
+        }
     }
 
     public static void UnitHid(GameState gameState, UnitState unit, byte player, string reason)
@@ -689,6 +726,12 @@ public static class Main
     #endregion
 
     #region Event Utils
+    private static readonly List<UnitData.Type> SUPER_UNITS = new(){UnitData.Type.Giant, UnitData.Type.Gaami, UnitData.Type.FireDragon, UnitData.Type.Centipede, UnitData.Type.Crab};
+
+    public static bool IsSuperUnit(UnitData.Type type)
+    {
+        return SUPER_UNITS.Contains(type);
+    }
 
     public static int CounterThroughTiles(List<TileData> tiles, Func<TileData, int> filter)
     {
