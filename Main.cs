@@ -82,7 +82,7 @@ public static class Main
 
         new Achievement(){
             idx = "yoink",
-            name = "Yoink!", // UNTESTED
+            name = "Yoink!", // Implemented
             description = "Mindbend a giant.",
             category = 1
         },
@@ -567,7 +567,7 @@ public static class Main
     [HarmonyPatch(typeof(ActionUtils), nameof(ActionUtils.TrainUnit))]
     public static void ActionUtils_TrainUnit(GameState gameState, PlayerState playerState, TileData tile, UnitData unitData)
     {
-        UnitAcquired(gameState, tile.coordinates, playerState.Id, "trainunit");
+        if(gameState != null && gameState.Map != null) UnitAcquired(gameState, tile.coordinates, playerState.Id, "trainunit");
     }
 
     [HarmonyPostfix]
@@ -644,7 +644,7 @@ public static class Main
 
     [HarmonyPostfix]
     [HarmonyPatch(typeof(TileData), nameof(TileData.SetExplored))]
-    public static void RevealAction_ExecuteDefault(TileData __instance, byte playerId, bool explored)
+    public static void TileData_SetExplored(TileData __instance, byte playerId, bool explored)
     {
         if (explored && !GetAchievement("cartography").unlocked && Main.LargeMapOrBigger(GameManager.GameState) && playerId == GameManager.LocalPlayer.Id)
         {
@@ -666,14 +666,19 @@ public static class Main
 
     public static void UnitAcquired(GameState gameState, WorldCoordinates coordinates, byte player, string reason)
     {
+        modLogger.LogMessage("1");
         TileData tile = gameState.Map.GetTile(coordinates);
         if(tile == null || tile.unit == null) return;
-        if(player != GameManager.LocalPlayer.Id) return;
+        if(GameManager.LocalPlayer == null || player != GameManager.LocalPlayer.Id) return;
+        modLogger.LogMessage("2");
         UnitState unit = tile.unit;
+        modLogger.LogMessage("3");
         if(reason == "hypnotistconvert" && unit.type == UnitData.Type.Giant) GrantAchievement(GetAchievement("yoink"));
         if(reason == "hypnotistconvert" && unit.type == UnitData.Type.MindBender) GrantAchievement(GetAchievement("hypno"));
+        modLogger.LogMessage("4");
         if(!GetAchievement("superteam").unlocked && IsSuperUnit(unit.type))
         {
+            modLogger.LogMessage("5");
             List<UnitData.Type> units = new();
             foreach(TileData tile1 in gameState.Map.Tiles)
             {
@@ -783,6 +788,7 @@ public static class Main
 
     public static bool LargeMapOrBigger(GameState gameState)
     {
+        if(gameState == null || gameState.Map == null) return false;
         return gameState.Map.Width >= 18;
     }
 
